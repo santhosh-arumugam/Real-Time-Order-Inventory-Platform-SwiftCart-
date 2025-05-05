@@ -57,21 +57,6 @@ Persists events (e.g., `ORDER_CREATED`, `ORDER_CANCELLED`) for reliability, audi
 | `sent`             | BOOLEAN           | DEFAULT FALSE                   | Indicates if the event was published to Kafka.                              |
 
 ## Relationships
-
-- **Order to OrderItem**:
-  - **Type**: One-to-Many.
-  - **Description**: One order can have multiple order items; each order item belongs to exactly one order.
-  - **Database**: The `order_id` column in `order_items` is a foreign key referencing `orders(order_id)` with `ON DELETE CASCADE`.
-  - **JPA**: 
-    - **Order**: `@OneToMany(mappedBy = "order", cascade = CascadeType.ALL, orphanRemoval = true)`
-    - **OrderItem**: `@ManyToOne(fetch = FetchType.LAZY)` with `@JoinColumn(name = "order_id")`
-
-- **Order to OrderEventLog**:
-  - **Type**: One-to-Many.
-  - **Description**: One order can have multiple event log entries; each event log entry is associated with one order.
-  - **Database**: The `order_id` column in `order_event_log` is a foreign key referencing `orders(order_id)` with `ON DELETE CASCADE`.
-  - **JPA**: The `order_id` in **OrderEventLog** is a simple field (not a `@ManyToOne`) to keep event logging decoupled. No direct `@OneToMany` in **Order** for performance.
-
-- **OrderItem to OrderEventLog**:
-  - **Type**: No direct relationship.
-  - **Description**: **OrderItem** data may be included in the `event_data` JSONB field of **OrderEventLog** (e.g., in an `ORDER_CREATED` event), but there is no direct foreign key or JPA relationship.
+- **Order to OrderItem**: One-to-Many. One **Order** can have multiple **OrderItem**s, linked via the `order_id` foreign key in `order_items`. Implemented with `@OneToMany` in **Order** and `@ManyToOne` in **OrderItem**.
+- **Order to OrderEventLog**: One-to-Many. One **Order** can have multiple **OrderEventLog** entries, linked via the `order_id` foreign key in `order_event_log`. Typically not mapped as a JPA relationship in **Order** to keep it lightweight.
+- **OrderItem to OrderEventLog**: No direct relationship. **OrderItem** data may be included in the `event_data` JSONB field of **OrderEventLog** for event payloads.
